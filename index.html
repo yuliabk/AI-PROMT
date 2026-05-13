@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Prompt Builder</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#172033;
+      --muted:#667085;
+      --line:#e5e7eb;
+      --brand:#5b5ee6;
+      --brand2:#7c3aed;
+      --soft:#eef2ff;
+      --good:#0f766e;
+      --warn:#b45309;
+      --danger:#b91c1c;
+      --shadow:0 18px 45px rgba(15,23,42,.08);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:linear-gradient(135deg,#f7f7ff 0%,#eef2ff 36%,#f8fafc 100%);
+      color:var(--ink);
+      min-height:100vh;
+    }
+    .wrap{max-width:1240px;margin:0 auto;padding:32px 18px 50px}
+    header{
+      background:linear-gradient(135deg,#111827,#3730a3 55%,#7c3aed);
+      color:#fff;
+      border-radius:28px;
+      padding:34px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    header:after{
+      content:"";
+      position:absolute;
+      width:260px;height:260px;
+      border-radius:50%;
+      background:rgba(255,255,255,.12);
+      left:-80px;top:-90px;
+    }
+    .badge{display:inline-flex;gap:8px;align-items:center;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);padding:8px 14px;border-radius:999px;font-size:14px}
+    h1{font-size:clamp(32px,5vw,58px);margin:18px 0 8px;letter-spacing:-1px}
+    .lead{font-size:clamp(16px,2.5vw,20px);line-height:1.65;max-width:780px;margin:0;color:#eef2ff}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}
+    .card{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
+    .section-title{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:22px}
+    .num{width:34px;height:34px;border-radius:12px;background:var(--soft);color:var(--brand);display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+    label{display:block;font-weight:700;margin:14px 0 7px}
+    input,textarea,select{
+      width:100%;
+      border:1px solid #d0d5dd;
+      border-radius:14px;
+      padding:12px 13px;
+      font-size:15px;
+      background:#fff;
+      color:var(--ink);
+      outline:none;
+      transition:.15s border,.15s box-shadow;
+    }
+    input:focus,textarea:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(91,94,230,.12)}
+    textarea{min-height:112px;resize:vertical;line-height:1.55}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .chip{border:1px solid #d9dce6;background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer;font-size:14px;user-select:none;transition:.15s}
+    .chip:hover{border-color:var(--brand);background:var(--soft)}
+    .chip.active{background:var(--brand);border-color:var(--brand);color:#fff}
+    .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .check{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff;font-weight:400}
+    .check input{width:auto;margin-top:2px}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+    button{
+      border:0;border-radius:14px;padding:12px 16px;cursor:pointer;font-weight:800;font-size:15px;
+      background:var(--brand);color:#fff;box-shadow:0 10px 24px rgba(91,94,230,.24);transition:.15s transform,.15s opacity;
+    }
+    button:hover{transform:translateY(-1px)}
+    button.secondary{background:#111827;box-shadow:none}
+    button.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+    button.good{background:var(--good)}
+    .output{
+      direction:ltr;text-align:left;
+      background:#0b1020;color:#e6edf7;
+      border-radius:18px;
+      padding:18px;
+      min-height:360px;
+      white-space:pre-wrap;
+      line-height:1.65;
+      font-family:Consolas, Monaco, monospace;
+      font-size:14px;
+      overflow:auto;
+    }
+    .note{font-size:14px;color:var(--muted);line-height:1.6;margin:8px 0 0}
+    .mini{font-size:13px;color:var(--muted)}
+    .panel{background:#f8fafc;border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:12px}
+    .score{display:inline-flex;align-items:center;gap:8px;background:#ecfdf5;color:var(--good);border:1px solid #99f6e4;border-radius:999px;padding:8px 12px;font-weight:800}
+    .warn{background:#fff7ed;color:var(--warn);border-color:#fed7aa}
+    .danger{background:#fef2f2;color:var(--danger);border-color:#fecaca}
+    .history-item{border:1px solid var(--line);border-radius:14px;padding:10px;margin-top:8px;background:#fff;cursor:pointer}
+    .history-item b{display:block;margin-bottom:4px}
+    details{border:1px solid var(--line);border-radius:18px;background:#fff;padding:12px;margin-top:10px}
+    summary{cursor:pointer;font-weight:800}
+    .quiz-option{display:block;width:100%;text-align:right;background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none;margin:8px 0}
+    .quiz-option.correct{background:#ecfdf5;border-color:#5eead4;color:#065f46}
+    .quiz-option.wrong{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+    footer{margin-top:24px;color:var(--muted);text-align:center;font-size:13px}
+    @media(max-width:900px){.grid,.row{grid-template-columns:1fr}.checks{grid-template-columns:1fr}header{padding:24px}.wrap{padding:16px 12px 34px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="badge">⚡ AI Prompt Builder - GitHub Pages Ready</div>
+      <h1>בונה פרומפטים לתמונות</h1>
+      <p class="lead">כלי אינטראקטיבי לבניית פרומפטים באנגלית מתוך רעיון בעברית. מתאים ל-GPT Image, Nano Banana, Canva וכלי יצירת תמונות נוספים. הכל עובד בדפדפן בלבד - בלי התקנות ובלי API.</p>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2 class="section-title"><span class="num">1</span>הזנת רעיון</h2>
+        <label for="hebrewIdea">הרעיון בעברית</label>
+        <textarea id="hebrewIdea" placeholder="לדוגמה: מודעת סטורי לסוכנות נסיעות על חופשה רומנטית בסנטוריני, ים כחול, מרפסת לבנה, שקיעה...">מודעת סטורי לסוכנות נסיעות על חופשה רומנטית בסנטוריני, ים כחול, מרפסת לבנה, שקיעה</textarea>
+
+        <label for="exactText">טקסט שחייב להופיע בתמונה</label>
+        <input id="exactText" placeholder="לדוגמה: החופשה היוונית שלך מתחילה כאן" value="החופשה היוונית שלך מתחילה כאן" />
+        <p class="note">אם לא צריך טקסט בתמונה - השאירי ריק. אם יש טקסט, הכלי יוסיף הוראה לשמירה מדויקת על הטקסט.</p>
+
+        <div class="row">
+          <div>
+            <label for="frameType">סוג תוצר</label>
+            <select id="frameType">
+              <option>Vertical story advertisement</option>
+              <option>Product advertising image</option>
+              <option>Social media post</option>
+              <option>Website hero banner</option>
+              <option>Infographic</option>
+              <option>Poster</option>
+              <option>UI mockup</option>
+              <option>Scientific illustration</option>
+            </select>
+          </div>
+          <div>
+            <label for="model">מודל יעד</label>
+            <select id="model">
+              <option>GPT Image 2</option>
+              <option>Nano Banana</option>
+              <option>Canva</option>
+              <option>Generic image model</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="aspect">פורמט</label>
+            <select id="aspect">
+              <option>Vertical 9:16</option>
+              <option>Square 1:1</option>
+              <option>Landscape 16:9</option>
+              <option>Portrait 4:5</option>
+              <option>Wide banner 21:9</option>
+            </select>
+          </div>
+          <div>
+            <label for="lens">מצלמה / פרספקטיבה</label>
+            <select id="lens">
+              <option>35mm lens, natural documentary perspective</option>
+              <option>50mm lens, realistic commercial photography</option>
+              <option>85mm lens, shallow depth of field</option>
+              <option>Isometric clean design</option>
+              <option>Top-down flat lay composition</option>
+              <option>Macro close-up</option>
+            </select>
+          </div>
+        </div>
+
+        <label>סגנון חזותי</label>
+        <div class="chips" id="styleChips">
+          <span class="chip active">Premium minimal</span>
+          <span class="chip">Luxury editorial</span>
+          <span class="chip">Clean commercial</span>
+          <span class="chip">Warm lifestyle</span>
+          <span class="chip">High-end travel</span>
+          <span class="chip">Scientific clean</span>
+          <span class="chip">Bold social media</span>
+        </div>
+
+        <label for="lighting">תאורה</label>
+        <select id="lighting">
+          <option>Warm golden hour light with soft backlight</option>
+          <option>Soft studio lighting with subtle shadows</option>
+          <option>Natural daylight, realistic shadows</option>
+          <option>Dramatic cinematic lighting</option>
+          <option>Bright clean e-commerce lighting</option>
+        </select>
+
+        <label for="extra">דגשים נוספים</label>
+        <textarea id="extra" placeholder="לדוגמה: להימנע ממראה גנרי, לשמור על טיפוגרפיה נקייה, צבעי ים ולבן, תחושה רומנטית אבל יוקרתית"></textarea>
+
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="noArtifacts" checked>למנוע עיוותים וארטיפקטים</label>
+          <label class="check"><input type="checkbox" id="noStock" checked>להימנע ממראה סטוק גנרי</label>
+          <label class="check"><input type="checkbox" id="textExact" checked>לשמור טקסט בדיוק</label>
+          <label class="check"><input type="checkbox" id="hebrewWrapper" checked>להוסיף הוראת תרגום טבעי מעברית</label>
+        </div>
+
+        <div class="actions">
+          <button onclick="generatePrompt()">צור פרומפט</button>
+          <button class="secondary" onclick="loadExample()">דוגמה מוכנה</button>
+          <button class="ghost" onclick="clearForm()">ניקוי</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title"><span class="num">2</span>הפרומפט הסופי</h2>
+        <div class="output" id="output"></div>
+        <div class="actions">
+          <button class="good" onclick="copyPrompt()">העתק פרומפט</button>
+          <button class="ghost" onclick="downloadPrompt()">הורד TXT</button>
+          <button class="ghost" onclick="saveToHistory()">שמור להיסטוריה</button>
+        </div>
+        <div id="copyMsg" class="note"></div>
+
+        <div class="panel">
+          <span id="qualityScore" class="score">ציון פרומפט: 0/100</span>
+          <p id="qualityTips" class="note"></p>
+        </div>
+
+        <h3>היסטוריה מקומית</h3>
+        <div id="history"></div>
+      </section>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2 class="section-title"><span class="num">3</span>בדיקת איכות</h2>
+        <details open>
+          <summary>צ'ק ליסט לפני שליחה למודל</summary>
+          <div class="panel">
+            <label class="check"><input type="checkbox">האם סוג התוצר ברור?</label>
+            <label class="check"><input type="checkbox">האם הסובייקט המרכזי מוגדר?</label>
+            <label class="check"><input type="checkbox">האם ציינתי קומפוזיציה/מצלמה?</label>
+            <label class="check"><input type="checkbox">האם ציינתי תאורה וסגנון?</label>
+            <label class="check"><input type="checkbox">אם יש טקסט - האם הוא בתוך מרכאות?</label>
+            <label class="check"><input type="checkbox">האם יש מגבלות נגד עיוותים?</label>
+          </div>
+        </details>
+        <details>
+          <summary>תבנית 7 הבלוקים</summary>
+          <ol>
+            <li>Frame type - סוג הפריים</li>
+            <li>Subject - מה רואים במרכז</li>
+            <li>Scene - איפה זה קורה</li>
+            <li>Style - שפה חזותית</li>
+            <li>Lighting - תאורה</li>
+            <li>Camera and composition - מצלמה וקומפוזיציה</li>
+            <li>Constraints - מגבלות ואיסורים</li>
+          </ol>
+        </details>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title"><span class="num">4</span>חידון קצר</h2>
+        <div id="quiz"></div>
+        <div class="actions">
+          <button onclick="resetQuiz()">איפוס חידון</button>
+        </div>
+      </section>
+    </div>
+
+    <footer>AI Prompt Builder - static GitHub Pages version. No API keys. No server. Local browser only.</footer>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const chips = Array.from(document.querySelectorAll('.chip'));
+    chips.forEach(chip => chip.addEventListener('click', () => {
+      chips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      generatePrompt();
+    }));
+
+    const fields = ['hebrewIdea','exactText','frameType','model','aspect','lens','lighting','extra','noArtifacts','noStock','textExact','hebrewWrapper'];
+    fields.forEach(id => {
+      const el = $(id);
+      if(el) el.addEventListener('input', generatePrompt);
+      if(el) el.addEventListener('change', generatePrompt);
+    });
+
+    function activeStyle(){
+      return (document.querySelector('.chip.active') || {}).textContent || 'Clean commercial';
+    }
+
+    function val(id){ return ($(id).value || '').trim(); }
+
+    function generatePrompt(){
+      const idea = val('hebrewIdea');
+      const exact = val('exactText');
+      const frame = val('frameType');
+      const model = val('model');
+      const aspect = val('aspect');
+      const lens = val('lens');
+      const light = val('lighting');
+      const extra = val('extra');
+      const style = activeStyle();
+      const useHebrewWrapper = $('hebrewWrapper').checked;
+
+      let lines = [];
+      if(useHebrewWrapper){
+        lines.push('Use the Hebrew user-provided details as semantic instructions and translate them naturally into English while generating the image. Do not render Hebrew text unless it appears inside quotation marks as required image text.');
+        lines.push('');
+      }
+      lines.push(`Create a ${frame.toLowerCase()} for ${model}.`);
+      lines.push('');
+      lines.push(`Hebrew source details: ${idea || '[add the visual idea here]'}`);
+      lines.push('');
+      lines.push(`Visual style: ${style}.`);
+      lines.push(`Lighting: ${light}.`);
+      lines.push(`Camera and composition: ${lens}.`);
+      lines.push(`Format: ${aspect} aspect ratio.`);
+
+      if(exact){
+        lines.push('');
+        lines.push(`Include the exact text "${exact}", verbatim, no substitutions, no spelling changes.`);
+      }
+      if(extra){
+        lines.push('');
+        lines.push(`Additional direction: ${extra}`);
+      }
+
+      const constraints = [];
+      if($('noArtifacts').checked){
+        constraints.push('no visible AI artifacts');
+        constraints.push('no distorted anatomy');
+        constraints.push('no duplicate objects');
+        constraints.push('no melted typography');
+        constraints.push('no unreadable text');
+      }
+      if($('noStock').checked){
+        constraints.push('avoid generic stock-photo aesthetics');
+        constraints.push('avoid over-smoothed surfaces');
+      }
+      if($('textExact').checked && exact){
+        constraints.push('verbatim text only');
+        constraints.push('no substitutions');
+        constraints.push('no misspellings');
+      }
+      if(constraints.length){
+        lines.push('');
+        lines.push(`Constraints: ${constraints.join(', ')}.`);
+      }
+
+      const prompt = lines.join('\n');
+      $('output').textContent = prompt;
+      updateQuality(prompt, exact, idea, extra);
+      return prompt;
+    }
+
+    function updateQuality(prompt, exact, idea, extra){
+      let score = 20;
+      const tips = [];
+      if(idea.length > 25) score += 18; else tips.push('להוסיף פירוט לרעיון המרכזי.');
+      if(prompt.includes('Visual style')) score += 12; else tips.push('להוסיף סגנון חזותי.');
+      if(prompt.includes('Lighting')) score += 12; else tips.push('להוסיף תאורה.');
+      if(prompt.includes('Camera and composition')) score += 12; else tips.push('להוסיף מצלמה/קומפוזיציה.');
+      if(prompt.includes('Format')) score += 8; else tips.push('להוסיף פורמט.');
+      if(exact.length > 0) score += 10;
+      if(prompt.includes('Constraints')) score += 10; else tips.push('להוסיף מגבלות.');
+      if(extra.length > 8) score += 8;
+      score = Math.min(score,100);
+      const el = $('qualityScore');
+      el.textContent = `ציון פרומפט: ${score}/100`;
+      el.className = 'score';
+      if(score < 60) el.classList.add('danger');
+      else if(score < 80) el.classList.add('warn');
+      $('qualityTips').textContent = tips.length ? 'כדאי לשפר: ' + tips.join(' ') : 'הפרומפט בנוי היטב ומוכן לשימוש.';
+    }
+
+    async function copyPrompt(){
+      const text = generatePrompt();
+      try{
+        await navigator.clipboard.writeText(text);
+        $('copyMsg').textContent = 'הפרומפט הועתק ללוח.';
+      }catch(e){
+        $('copyMsg').textContent = 'לא ניתן להעתיק אוטומטית. סמני את הטקסט והעתיקי ידנית.';
+      }
+    }
+
+    function downloadPrompt(){
+      const text = generatePrompt();
+      const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ai-prompt-builder-prompt.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function saveToHistory(){
+      const prompt = generatePrompt();
+      const item = {date:new Date().toLocaleString('he-IL'), title: val('hebrewIdea').slice(0,60) || 'Prompt', prompt};
+      const history = JSON.parse(localStorage.getItem('promptHistory') || '[]');
+      history.unshift(item);
+      localStorage.setItem('promptHistory', JSON.stringify(history.slice(0,8)));
+      renderHistory();
+    }
+
+    function renderHistory(){
+      const history = JSON.parse(localStorage.getItem('promptHistory') || '[]');
+      $('history').innerHTML = history.length ? '' : '<p class="mini">אין עדיין פרומפטים שמורים.</p>';
+      history.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<b>${item.title}</b><span class="mini">${item.date}</span>`;
+        div.onclick = () => { $('output').textContent = item.prompt; updateQuality(item.prompt, '', item.title, ''); };
+        $('history').appendChild(div);
+      });
+    }
+
+    function clearForm(){
+      $('hebrewIdea').value = '';
+      $('exactText').value = '';
+      $('extra').value = '';
+      generatePrompt();
+    }
+
+    function loadExample(){
+      $('hebrewIdea').value = 'צילום מוצר פרסומי של בקבוק בושם שחור מט 100 מ״ל עם פקק זהב וטיפות מים על הזכוכית, מונח על שיש שחור רטוב, נתזי מים, תחושה יוקרתית ודרמטית';
+      $('exactText').value = 'BLACK GOLD';
+      $('frameType').value = 'Product advertising image';
+      $('aspect').value = 'Portrait 4:5';
+      $('lens').value = '85mm lens, shallow depth of field';
+      $('lighting').value = 'Dramatic cinematic lighting';
+      $('extra').value = 'Luxury fragrance advertising, matte black and gold palette, realistic water droplets, sharp product focus.';
+      chips.forEach(c => c.classList.remove('active'));
+      chips[1].classList.add('active');
+      generatePrompt();
+    }
+
+    const quizData = [
+      {q:'מה הכי חשוב לכתוב בתחילת פרומפט ויזואלי?', a:['סוג התוצר והסובייקט המרכזי','רשימת איסורים בלבד','שם המודל בלבד'], correct:0},
+      {q:'מתי חייבים להשתמש במרכאות סביב טקסט?', a:['כאשר רוצים שהטקסט יופיע בדיוק בתמונה','רק כשמדובר באנגלית','אף פעם'], correct:0},
+      {q:'איזה רכיב משפר שליטה במראה התמונה?', a:['תאורה, עדשה וקומפוזיציה','רק מספר מילים כלליות','רק שם הצבע'], correct:0},
+      {q:'למה מוסיפים Constraints?', a:['כדי להפחית שגיאות, עיוותים וטקסט פגום','כדי להאריך את הפרומפט בלי צורך','כדי למחוק את הסגנון'], correct:0}
+    ];
+
+    function renderQuiz(){
+      const box = $('quiz');
+      box.innerHTML = '';
+      quizData.forEach((item, i) => {
+        const panel = document.createElement('div');
+        panel.className = 'panel';
+        panel.innerHTML = `<b>${i+1}. ${item.q}</b>`;
+        item.a.forEach((answer, j) => {
+          const btn = document.createElement('button');
+          btn.className = 'quiz-option';
+          btn.textContent = answer;
+          btn.onclick = () => {
+            Array.from(panel.querySelectorAll('button')).forEach(b => b.disabled = true);
+            btn.classList.add(j === item.correct ? 'correct' : 'wrong');
+            if(j !== item.correct){
+              panel.querySelectorAll('button')[item.correct].classList.add('correct');
+            }
+          };
+          panel.appendChild(btn);
+        });
+        box.appendChild(panel);
+      });
+    }
+
+    function resetQuiz(){ renderQuiz(); }
+
+    generatePrompt();
+    renderHistory();
+    renderQuiz();
+  </script>
+</body>
+</html>

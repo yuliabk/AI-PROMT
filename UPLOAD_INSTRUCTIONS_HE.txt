@@ -1,0 +1,22 @@
+הוראות העלאה ל-GitHub Pages
+
+1. לפתוח Repository חדש בגיטהאב בשם AI-PROMT-BILDER או בשם אחר שתבחרי.
+2. חשוב שה-Repository יהיה Public.
+3. לפתוח את קובץ ה-ZIP במחשב.
+4. להעלות את הקבצים שבתוכו ישירות לתיקייה הראשית של הריפוזיטורי:
+   - index.html
+   - 404.html
+   - .nojekyll
+   - README.md
+5. לא להעלות את ה-ZIP עצמו.
+6. להיכנס ל-Settings > Pages.
+7. לבחור:
+   Source: Deploy from a branch
+   Branch: main
+   Folder: /root
+8. ללחוץ Save.
+9. לחכות כמה דקות.
+10. לפתוח את הקישור שמופיע ב-Settings > Pages.
+
+אם הריפוזיטורי נקרא AI-PROMT-BILDER, הקישור יהיה לרוב:
+https://yuliabk.github.io/AI-PROMT-BILDER/
